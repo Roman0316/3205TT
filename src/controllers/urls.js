@@ -37,7 +37,7 @@ async function createShortURL({ originalUrl, expiresIn, alias }) {
   }
 
   await set(shortHash, {
-    originalUrl, createdAt: new Date(), clickCount: 0, analytics: [{ timeToClick: null, ipAddress: null }],
+    originalUrl, createdAt: new Date(), clickCount: 0, analytics: [],
   }, expiresIn || DEFAULT_EX);
   return `${URL}:${PORT}/${shortHash}`;
 }
@@ -47,9 +47,9 @@ async function getOriginalUrl({ shortUrl }, ip) {
   if (!url) {
     throw new NotFound('Reference not found');
   }
+  const cleanIp = ip.split(':').pop();
   url.clickCount += 1;
-  url.analytics[0].timeToClick = new Date();
-  url.analytics[0].ipAddress = ip.split(':').pop();
+  url.analytics.push({ timeToclick: new Date(), ipAddress: cleanIp });
   const ttl = await getTtl(shortUrl);
   await set(shortUrl, url, ttl);
   return url.originalUrl;
@@ -65,8 +65,9 @@ async function deleteShortUrl({ shortUrl }) {
 }
 
 async function getAnalytics({ shortUrl }) {
-  const analytics = await get(shortUrl);
-  return analytics;
+  const { clickCount, analytics } = await get(shortUrl);
+  const lastIpAddresses = analytics.slice(-5).map((entry) => entry.ipAddress);
+  return { clickCount, lastIpAddresses };
 }
 
 module.exports = {

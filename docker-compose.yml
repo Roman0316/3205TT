@@ -9,3 +9,14 @@ services:
     command: redis-server --requirepass redis_secret
     ports:
       - "6379:6379"
+  node-app:
+    container_name: test-task
+    build:
+      context: "."
+    image: test-task
+    restart: unless-stopped
+    depends_on:
+      - redis
+    env_file: ".env"
+    ports:
+      - "3050:3050"
