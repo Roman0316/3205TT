@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Shortener</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h2>URL Shortener</h2>
+    <form id="shortenForm">
+      <div class="form-group">
+        <label for="originalUrl">Original URL:</label>
+        <input type="text" id="originalUrl" placeholder="Enter original URL" required>
+      </div>
+      <div class="form-group">
+        <label for="expiresIn">Expires In (seconds):</label>
+        <input type="number" id="expiresIn" placeholder="Enter expiration time (optional)">
+      </div>
+      <div class="form-group">
+        <label for="alias">Custom Alias:</label>
+        <input type="text" id="alias" placeholder="Enter custom alias (optional)">
+      </div>
+      <button type="submit">Generate Short URL</button>
+    </form>
+    <div id="result" class="result" style="display: none;"></div>
+  </div>
+
+  <script>
+    document.getElementById('shortenForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+
+      const originalUrl = document.getElementById('originalUrl').value;
+      const expiresIn = document.getElementById('expiresIn').value;
+      const alias = document.getElementById('alias').value;
+
+      if (!originalUrl) {
+        alert('Original URL is required!');
+        return;
+      }
+
+      try {
+        const response = await fetch('/shorten', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ originalUrl, expiresIn: expiresIn || null, alias: alias || null })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to create short URL');
+        }
+
+        const data = await response.json();
+        document.getElementById('result').textContent = `Short URL: ${data}`;
+        document.getElementById('result').style.display = 'block';
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    });
+  </script>
+</body>
+</html>
